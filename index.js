@@ -138,17 +138,18 @@ async function run() {
 
     // my add-data  
     app.get('/myData/:email', async (req, res) => {
+        // const data=req.user
+        // console.log('sdf',data.email)
 
-
-      if (req.user.email !== req.params.email) {
-        return res.status(403).send({ message: 'forbidden access' })
-      }
-    //   let query = {};
-    //   if (req.user.email) {
-    //     query = { email: req.user.email }
+    //   if (req.user.email !== req.params.email) {
+    //     return res.status(403).send({ message: 'forbidden access' })
     //   }
+    // //   let query = {};
+    // //   if (req.user.email) {
+    // //     query = { email: req.user.email }
+    // //   }
 
-      const email = req.user.email
+      const email = req.params.email
       const cursor = add_Data.find({ email })
       const request = await cursor.toArray();
       res.send(request)
@@ -188,14 +189,14 @@ async function run() {
     //   res.send(result);
     // })
 
-    // delete recommendation data
-    // app.delete('/de/:id', async (req, res) => {
-    //   const id = req.params.id;
-    //   // console.log(id)
-    //   const query = { _id: new ObjectId(id) }
-    //   const result = await data1.deleteOne(query);
-    //   res.send(result);
-    // })
+    // delete my added data
+    app.delete('/delete/:id', async (req, res) => {
+      const id = req.params.id;
+    //   console.log('asdf',id)
+      const query = { _id: new ObjectId(id) }
+      const result = await add_Data.deleteOne(query);
+      res.send(result);
+    })
 
 
     // recommendation data post
