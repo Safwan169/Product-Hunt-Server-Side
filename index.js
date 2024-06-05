@@ -105,20 +105,20 @@ async function run() {
     //   console.log(id)
     //   const filter = { _id: new ObjectId(id) }
     //   const options = { upsert: true };
-    //   const datas1 = req.body;
-    //   console.log(datas1)
+    //   const data = req.body;
+    //   console.log(data)
 
     //   const updateData = {
     //     $set: {
-    //       date: datas1.date,
-    //       name: datas1.name,
-    //       brand_name: datas1.brand_name,
-    //       url: datas1.url,
-    //       reason: datas1.reason,
-    //       location: datas1.location,
-    //       product_title: datas1.product_title,
-    //       // description: datas1.description,
-    //       // spot: datas1.spot
+    //       date: data.date,
+    //       name: data.name,
+    //       brand_name: data.brand_name,
+    //       url: data.url,
+    //       reason: data.reason,
+    //       location: data.location,
+    //       product_title: data.product_title,
+    //       // description: data.description,
+    //       // spot: data.spot
     //     }
     //   }
 
@@ -156,29 +156,40 @@ async function run() {
 
     })
 
-    // recommendation update
-    // app.put('/recc/:idd', async (req, res) => {
-    //   const id = req.params.idd;
-    //   console.log(id)
-    //   const filter = { _id: new ObjectId(id) }
-    //   const options = { upsert: true };
-    //   // const datas1 = req.body;
-    //   // console.log(datas1)
+    // my data update
+    app.put('/update/:id', async (req, res) => {
+      const id = req.params.id;
+      const data=req.body
+      console.log(id)
+      const filter = { _id: new ObjectId(id) }
+      const options = { upsert: true };
+      // const data = req.body;
+      // console.log(data)
 
-    //   const updateData = {
-    //     $inc: { recommendationCount: 1 }
-    //   }
+      const updateData = {
+        $set: {
+          productName: data.productName,
+          productImage: data.productImage,
+          description: data.description,
+          tags: data.tags,
+          externalLinks: data.visitors,
+          // location: data.location,
+          // Country: data.Country,
+          // description: data.description,
+          // spot: data.spot
+      }
+      }
 
-    //   const result = await data.updateOne(filter, updateData, options);
-    //   res.send(result);
-    // })
+      const result = await add_Data.updateOne(filter, updateData, options);
+      res.send(result);
+    })
     // decreasing  recommendation count
     // app.put('/delete/:idd', async (req, res) => {
     //   const id = req.params.idd;
     //   const filter = { _id: new ObjectId(id) }
     //   const options = { upsert: true };
-    //   // const datas1 = req.body;
-    //   // console.log(datas1)
+    //   // const data = req.body;
+    //   // console.log(data)
     //   // console.log(id,filter)
 
     //   const deleteData = {
