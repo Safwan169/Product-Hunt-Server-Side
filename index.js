@@ -84,11 +84,11 @@ async function run() {
 //   })
 
     // get all add data 
-    // app.get('/my-data', async (req, res) => {
-    //   const cursor = add_Data.find();
-    //   const result = await cursor.toArray();
-    //   res.send(result);
-    // })
+    app.get('/alldata', async (req, res) => {
+      const cursor = add_Data.find();
+      const result = await cursor.toArray();
+      res.send(result);
+    })
 
     // post  add data
 
