@@ -100,31 +100,21 @@ async function run() {
     })
 
     // update queries data
-    // app.put('/queriesUpdate/:idd', async (req, res) => {
-    //   const id = req.params.idd;
-    //   console.log(id)
-    //   const filter = { _id: new ObjectId(id) }
-    //   const options = { upsert: true };
-    //   const data = req.body;
-    //   console.log(data)
+    app.put('/vote/:idd', async (req, res) => {
+      const id = req.params.idd;
+      console.log(id)
+      const filter = { _id: new ObjectId(id) }
+      const options = { upsert: true };
+      // const data = req.body;
+      // console.log(data)
 
-    //   const updateData = {
-    //     $set: {
-    //       date: data.date,
-    //       name: data.name,
-    //       brand_name: data.brand_name,
-    //       url: data.url,
-    //       reason: data.reason,
-    //       location: data.location,
-    //       product_title: data.product_title,
-    //       // description: data.description,
-    //       // spot: data.spot
-    //     }
-    //   }
+      const updateData = {
+        $inc: { vote: 1 }
+      }
 
-    //   const result = await data.updateOne(filter, updateData, options);
-    //   res.send(result);
-    // })
+      const result = await add_Data.updateOne(filter, updateData, options);
+      res.send(result);
+    })
 
     // delete queries data
     // app.delete('/queries/:id', async (req, res) => {
