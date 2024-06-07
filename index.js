@@ -99,7 +99,7 @@ async function run() {
       res.send(result)
     })
 
-    // update vote data
+    // increment vote data
     app.put('/vote/:idd', async (req, res) => {
       const id = req.params.idd;
       console.log(id)
@@ -146,6 +146,58 @@ async function run() {
         const result = await add_Data.updateOne(filter, updateData, options);
         res.send(result);
       }
+      else{res.send(" exist")}
+
+  
+    })
+    // decrement vote data
+    app.put('/voteDec/:idd', async (req, res) => {
+      const id = req.params.idd;
+      console.log(id)
+      const data = req.body
+      // console.log(JSON.stringify(data.email))
+
+      const filter = { _id: new ObjectId(id) }
+
+
+      // const cursor = add_Data.find({ voteUser:email })
+      // const userEmail = await cursor.toArray();
+
+    //   var count =add_Data.countDocuments({ 
+    //     "_id": id, 
+    
+    // });
+
+    // console.log(count)
+
+      // const options = {
+      //   // Sort matched documents in descending order by rating
+      //   // sort: { voteUser:`${JSON.stringify(data)}` },
+      //   sort: { "voteUser":`${JSON.stringify(data)}` },
+      //   // Include only the `title` and `imdb` fields in the returned document
+      //   projection: { _id: 0, voteUser: 1 },
+      // };
+
+      const result = await add_Data.findOne(filter,);
+      console.log('aita',result.voteUser)
+      const uservote=((result?.voteUser)?.find(d=>d==data.email))
+      console.log(uservote)
+
+      if (uservote) {
+        const filter = { _id: new ObjectId(id) }
+        const options = { upsert: true };
+        // const data = req.body;
+        console.log('asdfsdf')
+  
+        const updateData = {
+          $inc: { vote: -1 },
+          $pull:{"voteUser":data.email}
+        }
+  
+        const result = await add_Data.updateOne(filter, updateData, options);
+        res.send(result);
+      }
+      else{res.send(" exist")}
 
   
     })
