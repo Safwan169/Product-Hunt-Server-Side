@@ -104,7 +104,7 @@ async function run() {
       const id = req.params.idd;
       console.log(id)
       const data = req.body
-      console.log(data.email)
+      // console.log(JSON.stringify(data.email))
 
       const filter = { _id: new ObjectId(id) }
 
@@ -128,9 +128,11 @@ async function run() {
       // };
 
       const result = await add_Data.findOne(filter,);
-      console.log('dfds',result.voteUser)
+      console.log('aita',result.voteUser)
+      const uservote=((result?.voteUser)?.find(d=>d==data.email))
+      console.log(uservote)
 
-      if (result.voteUser!==JSON.stringify(data.email)) {
+      if (!uservote) {
         const filter = { _id: new ObjectId(id) }
         const options = { upsert: true };
         // const data = req.body;
@@ -138,7 +140,7 @@ async function run() {
   
         const updateData = {
           $inc: { vote: 1 },
-          $set:{'voteUser': JSON.stringify(data.email)}
+          $push:{"voteUser":data.email}
         }
   
         const result = await add_Data.updateOne(filter, updateData, options);
