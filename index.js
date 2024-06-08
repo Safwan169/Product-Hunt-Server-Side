@@ -63,8 +63,9 @@ async function run() {
 
 
     const database = client.db("Product-Hunt");
-    const add_Data = database.collection("add-product");
     // const data1 = database.collection("recommendationData");
+    const add_Data = database.collection("add-product");
+    const UserData = database.collection("UserData");
 
 
     // auth related api
@@ -82,6 +83,24 @@ async function run() {
 //       console.log('logging out', user);
 //       res.clearCookie('token', {...cookieOptions, maxAge: 0 }).send({ success: true })
 //   })
+
+    // User DAta
+    app.post('/User/:email', async (req, res) => {
+      const data = req.body
+      const email=req.params.email
+    //   console.log(data)
+  const filter={email:email}
+    const foundEmail = await UserData.findOne(filter);
+    console.log(foundEmail)
+      if (!foundEmail) {
+        const result = await UserData.insertOne(data)
+        // res.send(result)
+      }
+    // const foundEmailData = await UserData.findOne(filter);
+    res.send(foundEmail)
+
+     
+    })
 
     // get all add data 
     app.get('/alldata', async (req, res) => {
