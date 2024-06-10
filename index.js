@@ -8,7 +8,8 @@ require('dotenv').config()
 const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 
 
-const cors = require('cors')
+const cors = require('cors');
+const { parse } = require('dotenv');
 app.use(express.json());
 // app.use(cookieParser());
 app.use(cors(
@@ -66,6 +67,8 @@ async function run() {
     // const data1 = database.collection("recommendationData");
     const add_Data = database.collection("add-product");
     const UserData = database.collection("UserData");
+    const feturedData = database.collection("feturedData");
+    const reportData = database.collection("reportData");
 
 
     // auth related api
@@ -84,7 +87,30 @@ async function run() {
 //       res.clearCookie('token', {...cookieOptions, maxAge: 0 }).send({ success: true })
 //   })
 
-    // User DAta
+ 
+
+// status Update By moderator
+app.put('/status/:id', async (req, res) => {
+  const id = req.params.id;
+  const dd=req.body 
+  console.log('dasdta',dd.text,id)
+  const filter = { _id: new ObjectId(id) }
+  const options = { upsert: true };
+  // const data = req.body;
+  // console.log(data)
+
+  const updateData = {
+    $set: {
+      status:  `${dd.text}`,
+     
+  }
+  }
+
+  const result = await add_Data.updateOne(filter, updateData, options);
+  res.send(result);
+})
+
+    // User Data post
     app.post('/User/:email', async (req, res) => {
       const data = req.body
       const email=req.params.email
@@ -94,12 +120,77 @@ async function run() {
     console.log(foundEmail)
       if (!foundEmail) {
         const result = await UserData.insertOne(data)
-        // res.send(result)
+        res.send(result)
       }
     // const foundEmailData = await UserData.findOne(filter);
-    res.send(foundEmail)
+    // res.send(foundEmail)
 
      
+    })
+
+
+    // user data get
+    app.get('/User/:email',async(req,res)=>{
+      // const data =req.body;
+      const email =req.params.email
+      const filter={email:email}
+      const foundEmail= await UserData.findOne(filter)
+      res.send(foundEmail)
+    })
+
+    //get user data 
+    app.get('/user',async(req,res)=>{
+      const cursor=UserData.find()
+      const request=await cursor.toArray()
+      res.send(request)
+    })
+
+    // user role changed
+    app.put('/roleChanged/:id',async(req,res)=>{
+
+      const id = req.params.id;
+      const data=req.body
+      console.log(data)
+      const filter = { _id: new ObjectId(id) }
+      const options = { upsert: true };
+      // const data = req.body;
+      // console.log(data)
+
+      const updateData = {
+        $set: {
+          status:`${data.data}`
+      }
+      }
+
+      const result = await UserData.updateOne(filter, updateData, options);
+      res.send(result);
+    })
+
+    
+
+    // fetured data
+    app.post('/fetured', async (req, res) => {
+      const data = req.body
+      // const email=req.params.email
+      console.log(data)
+  // const filter={email:email}
+  //   const foundEmail = await UserData.findOne(filter);
+  //   console.log(foundEmail)
+  //     if (!foundEmail) {
+        const result = await feturedData.insertOne(data)
+        res.send(result)
+  //     }
+  //   // const foundEmailData = await UserData.findOne(filter);
+  //   res.send(foundEmail)
+
+     
+    })
+
+    // get featured data
+    app.get('/fetured',async(req,res)=>{
+      const cursor=feturedData.find();
+      const request=await cursor.toArray()
+      res.send(request)
     })
 
     // get all add data 
@@ -108,13 +199,36 @@ async function run() {
       const result = await cursor.toArray();
       res.send(result);
     })
+    // get all add data  by tags
+    app.post('/alldataTags', async (req, res) => {
+      const data=req.body
+    
+
+    const key = 'text';
+      const query = { [`tags.${key}`]: data.tag };
+
+
+      const cursor = add_Data.find(query);
+     
+
+      if (data.tag) {
+        const result = await cursor.toArray();
+        // console.log(result)
+       return res.send(result);        
+       }
+      const all = add_Data.find();
+
+       const result = await all.toArray();
+
+       res.send(result)
+    })
     app.get('/alldata/:id', async (req, res) => {
       const id=req.params.id
       const filter = { _id: new ObjectId(id) }
 
       // const cursor = add_Data.findOne(filter);
       const result = await add_Data.findOne(filter);;
-      res.send(result);
+      // res.send(result);
     })
 
     // post  add data
@@ -126,6 +240,22 @@ async function run() {
       res.send(result)
     })
 
+    // report data
+
+    app.post('/report',async(req,res)=>{
+      const data=req.body
+      // console.log(data)
+      const result=await reportData.insertOne(data)
+      res.send(result)
+    })
+
+    // get report data
+    app.get('/getReport',async(req,res)=>{
+      const cursor=reportData.find()
+      const request=await cursor.toArray()
+      res.send(request)
+    })
+
     // increment vote data
     app.put('/vote/:idd', async (req, res) => {
       const id = req.params.idd;
@@ -133,7 +263,7 @@ async function run() {
       const data = req.body
       // console.log(JSON.stringify(data.email))
 
-      const filter = { _id: new ObjectId(id) }
+      // const filter = { _id: new ObjectId(id) }
 
 
       // const cursor = add_Data.find({ voteUser:email })
@@ -153,25 +283,37 @@ async function run() {
       //   // Include only the `title` and `imdb` fields in the returned document
       //   projection: { _id: 0, voteUser: 1 },
       // };
+      const filter = { _id: new ObjectId(id) }
+      const filter1 = { _id: id }
+
 
       const result = await add_Data.findOne(filter,);
+      const featured = await feturedData.findOne(filter1,);
       console.log('aita',result.voteUser)
       const uservote=((result?.voteUser)?.find(d=>d==data.email))
+      const uservote1=((featured?.voteUser)?.find(d=>d==data.email))
       console.log(uservote)
 
+
+      const options = { upsert: true };
+      // const data = req.body;
+      console.log('asdfsdf')
+
+      const updateData = {
+        $inc: { vote: 1 },
+        $push:{"voteUser":data.email}
+      }
+
       if (!uservote) {
-        const filter = { _id: new ObjectId(id) }
-        const options = { upsert: true };
-        // const data = req.body;
-        console.log('asdfsdf')
-  
-        const updateData = {
-          $inc: { vote: 1 },
-          $push:{"voteUser":data.email}
-        }
+    
   
         const result = await add_Data.updateOne(filter, updateData, options);
         res.send(result);
+        if (featured && !uservote1) {
+        const result2 = await feturedData.updateOne(filter1, updateData, options);
+
+          
+        }
       }
       else{res.send(" exist")}
 
@@ -185,6 +327,7 @@ async function run() {
       // console.log(JSON.stringify(data.email))
 
       const filter = { _id: new ObjectId(id) }
+      const filter1 = { _id: id }
 
 
       // const cursor = add_Data.find({ voteUser:email })
@@ -206,12 +349,14 @@ async function run() {
       // };
 
       const result = await add_Data.findOne(filter,);
+      const result1 = await feturedData.findOne(filter1,);
       console.log('aita',result.voteUser)
       const uservote=((result?.voteUser)?.find(d=>d==data.email))
+      const uservote1=((result1?.voteUser)?.find(d=>d==data.email))
       console.log(uservote)
 
-      if (uservote) {
-        const filter = { _id: new ObjectId(id) }
+      if (uservote ) {
+        // const filter = { _id: new ObjectId(id) }
         const options = { upsert: true };
         // const data = req.body;
         console.log('asdfsdf')
@@ -223,6 +368,12 @@ async function run() {
   
         const result = await add_Data.updateOne(filter, updateData, options);
         res.send(result);
+
+        if (result1 && uservote1) {
+        const result1 = await feturedData.updateOne(filter1, updateData, options);
+
+          
+        }
       }
       else{res.send(" exist")}
 
@@ -309,6 +460,16 @@ async function run() {
     //   console.log('asdf',id)
       const query = { _id: new ObjectId(id) }
       const result = await add_Data.deleteOne(query);
+      res.send(result);
+    })
+    // delete reported  data form reported collection and alldata collection 
+    app.delete('/reportdel/:id', async (req, res) => {
+      const id = req.params.id;
+    //   console.log('asdf',id)
+      const query = { _id: new ObjectId(id) }
+      const query2 = { id: id }
+      const result = await add_Data.deleteOne(query);
+      const result2 = await reportData.deleteOne(query2);
       res.send(result);
     })
 
