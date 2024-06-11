@@ -2,47 +2,54 @@ const express = require('express');
 const app = express();
 const port = process.env.PROT || 5000;
 require('dotenv').config()
-// const jwt = require('jsonwebtoken');
-// const cookieParser = require('cookie-parser')
+const jwt = require('jsonwebtoken');
+const cookieParser = require('cookie-parser')
 
 const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 
 
 const cors = require('cors');
-const { parse } = require('dotenv');
 app.use(express.json());
-// app.use(cookieParser());
+app.use(cookieParser());
 app.use(cors(
   {
     origin: ["http://localhost:5174", "http://localhost:5173", "https://product-info-bd6b7.web.app"],
     methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
-    // credentials: true
+    credentials: true
   }
 
 ));
 
-// const verifyToken = (req, res, next) => {
-//   const token = req?.cookies?.token;
-//   console.log('token in the middleware', token);
-//   // no token available 
-//   if (!token) {
-//     return res.status(401).send({ message: 'unauthorized access ' })
-//   }
-//   jwt.verify(token, process.env.ACCESS_TOKEN_SECRET, (err, decoded) => {
-//     if (err) {
-//       return res.status(401).send({ message: 'unauthorized access ' })
-//     }
-//     req.user = decoded;
-//     next();
-//   })
-// }
+
+// Todo:incomplete
+
+const verifyToken = (req, res, next) => {
+  const token = req?.cookies?.token;
+  console.log('token in the middleware', token);
+  // no token available 
+  if (!token) {
+    console.log("no")
+    return res.status(401).send({ message: 'unauthorized access ' })
+  }
+  jwt.verify(token, process.env.ACCESS_TOKEN_SECRET, (err, decoded) => {
+    if (err) {
+    console.log("yesno")
+
+      return res.status(401).send({ message: 'unauthorized access ' })
+    }
+    console.log("yes")
+
+    req.user = decoded;
+    next();
+  })
+}
 
 
-// const cookieOptions = {
-//   httpOnly: true,
-//   secure: process.env.NODE_ENV === "production",
-//   sameSite: process.env.NODE_ENV === "production" ? "none" : "strict",
-// };
+const cookieOptions = {
+  httpOnly: true,
+  secure: process.env.NODE_ENV === "production",
+  sameSite: process.env.NODE_ENV === "production" ? "none" : "strict",
+}
 
 
 const uri = `mongodb+srv://${process.env.DATA_1}:${process.env.DATA_2}@cluster0.6zehkma.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0`;
@@ -69,23 +76,25 @@ async function run() {
     const UserData = database.collection("UserData");
     const feturedData = database.collection("feturedData");
     const reportData = database.collection("reportData");
+    const reviewData = database.collection("reviewData");
 
 
     // auth related api
-    // app.post('/jwt', async (req, res) => {
-    //   const user = req.body;
-    //   console.log('user for token', user);
-    //   const token = jwt.sign(user, process.env.ACCESS_TOKEN_SECRET, { expiresIn: '1h' });
+    app.post('/jwt', async (req, res) => {
+      const user = req.body;
+      console.log('user for token', user);
+      const token = jwt.sign(user, process.env.ACCESS_TOKEN_SECRET, { expiresIn: '1h' });
 
-    //   res.cookie('token', token,cookieOptions)
-    //     .send({ success: true });
-    // })
+      res.cookie('token', token,cookieOptions)
+        .send({ success: true });
+    })
 
-//     app.post('/logout', async (req, res) => {
-//       const user = req.body;
-//       console.log('logging out', user);
-//       res.clearCookie('token', {...cookieOptions, maxAge: 0 }).send({ success: true })
-//   })
+    // when Logout user 
+    app.post('/logout', async (req, res) => {
+      const user = req.body;
+      console.log('logging out', user);
+      res.clearCookie('token', {...cookieOptions, maxAge: 0 }).send({ success: true })
+  })
 
  
 
@@ -93,7 +102,7 @@ async function run() {
 app.put('/status/:id', async (req, res) => {
   const id = req.params.id;
   const dd=req.body 
-  console.log('dasdta',dd.text,id)
+  // console.log('dasdta',dd.text,id)
   const filter = { _id: new ObjectId(id) }
   const options = { upsert: true };
   // const data = req.body;
@@ -117,7 +126,7 @@ app.put('/status/:id', async (req, res) => {
     //   console.log(data)
   const filter={email:email}
     const foundEmail = await UserData.findOne(filter);
-    console.log(foundEmail)
+    // console.log(foundEmail)
       if (!foundEmail) {
         const result = await UserData.insertOne(data)
         res.send(result)
@@ -150,7 +159,7 @@ app.put('/status/:id', async (req, res) => {
 
       const id = req.params.id;
       const data=req.body
-      console.log(data)
+      // console.log(data)
       const filter = { _id: new ObjectId(id) }
       const options = { upsert: true };
       // const data = req.body;
@@ -172,7 +181,7 @@ app.put('/status/:id', async (req, res) => {
     app.post('/fetured', async (req, res) => {
       const data = req.body
       // const email=req.params.email
-      console.log(data)
+      .log(data)
   // const filter={email:email}
   //   const foundEmail = await UserData.findOne(filter);
   //   console.log(foundEmail)
@@ -248,6 +257,22 @@ app.put('/status/:id', async (req, res) => {
       const result=await reportData.insertOne(data)
       res.send(result)
     })
+    // reviews
+    app.post('/rev',async(req,res)=>{
+      const data=req.body
+      // console.log(data)
+      const result=await reviewData.insertOne(data)
+      res.send(result)
+    })
+    app.get("/vvv",async(req,res)=>{
+      // const id=req.params.id
+      // const filter = { _id: new ObjectId(id) }
+
+      // const cursor = add_Data.findOne(filter);
+      const result = await reviewData.find().toArray();
+      res.send(result)
+
+    })
 
     // get report data
     app.get('/getReport',async(req,res)=>{
@@ -259,7 +284,7 @@ app.put('/status/:id', async (req, res) => {
     // increment vote data
     app.put('/vote/:idd', async (req, res) => {
       const id = req.params.idd;
-      console.log(id)
+      // console.log(id)
       const data = req.body
       // console.log(JSON.stringify(data.email))
 
@@ -289,15 +314,15 @@ app.put('/status/:id', async (req, res) => {
 
       const result = await add_Data.findOne(filter,);
       const featured = await feturedData.findOne(filter1,);
-      console.log('aita',result.voteUser)
+      // console.log('aita',result.voteUser)
       const uservote=((result?.voteUser)?.find(d=>d==data.email))
       const uservote1=((featured?.voteUser)?.find(d=>d==data.email))
-      console.log(uservote)
+      // console.log(uservote)
 
 
       const options = { upsert: true };
       // const data = req.body;
-      console.log('asdfsdf')
+      // console.log('asdfsdf')
 
       const updateData = {
         $inc: { vote: 1 },
@@ -322,7 +347,7 @@ app.put('/status/:id', async (req, res) => {
     // decrement vote data
     app.put('/voteDec/:idd', async (req, res) => {
       const id = req.params.idd;
-      console.log(id)
+      // console.log(id)
       const data = req.body
       // console.log(JSON.stringify(data.email))
 
@@ -350,16 +375,16 @@ app.put('/status/:id', async (req, res) => {
 
       const result = await add_Data.findOne(filter,);
       const result1 = await feturedData.findOne(filter1,);
-      console.log('aita',result.voteUser)
+      // console.log('aita',result.voteUser)
       const uservote=((result?.voteUser)?.find(d=>d==data.email))
       const uservote1=((result1?.voteUser)?.find(d=>d==data.email))
-      console.log(uservote)
+      // console.log(uservote)
 
       if (uservote ) {
         // const filter = { _id: new ObjectId(id) }
         const options = { upsert: true };
         // const data = req.body;
-        console.log('asdfsdf')
+        // console.log('asdfsdf')
   
         const updateData = {
           $inc: { vote: -1 },
@@ -391,7 +416,7 @@ app.put('/status/:id', async (req, res) => {
 
 
     // my add-data  
-    app.get('/myData/:email', async (req, res) => {
+    app.get('/myData/:email',verifyToken, async (req, res) => {
         // const data=req.user
         // console.log('sdf',data.email)
 
@@ -411,10 +436,10 @@ app.put('/status/:id', async (req, res) => {
     })
 
     // my data update
-    app.put('/update/:id', async (req, res) => {
+    app.put('/update/:id',verifyToken, async (req, res) => {
       const id = req.params.id;
       const data=req.body
-      console.log(id)
+      // console.log(id)
       const filter = { _id: new ObjectId(id) }
       const options = { upsert: true };
       // const data = req.body;
@@ -455,7 +480,7 @@ app.put('/status/:id', async (req, res) => {
     // })
 
     // delete my added data
-    app.delete('/delete/:id', async (req, res) => {
+    app.delete('/delete/:id',verifyToken, async (req, res) => {
       const id = req.params.id;
     //   console.log('asdf',id)
       const query = { _id: new ObjectId(id) }
