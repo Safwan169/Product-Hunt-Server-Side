@@ -13,7 +13,7 @@ app.use(express.json());
 app.use(cookieParser());
 app.use(cors(
   {
-    origin: ["http://localhost:5174", "http://localhost:5173", "https://product-info-bd6b7.web.app"],
+    origin: ["http://localhost:5174", "http://localhost:5173", "https://ass-12-834ed.web.app"],
     methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
     credentials: true
   }
@@ -25,19 +25,19 @@ app.use(cors(
 
 const verifyToken = (req, res, next) => {
   const token = req?.cookies?.token;
-  console.log('token in the middleware', token);
+  // console.log('token in the middleware', token);
   // no token available 
   if (!token) {
-    console.log("no")
+    // console.log("no")
     return res.status(401).send({ message: 'unauthorized access ' })
   }
   jwt.verify(token, process.env.ACCESS_TOKEN_SECRET, (err, decoded) => {
     if (err) {
-    console.log("yesno")
+    // console.log("yesno")
 
       return res.status(401).send({ message: 'unauthorized access ' })
     }
-    console.log("yes")
+    // console.log("yes")
 
     req.user = decoded;
     next();
@@ -77,12 +77,13 @@ async function run() {
     const feturedData = database.collection("feturedData");
     const reportData = database.collection("reportData");
     const reviewData = database.collection("reviewData");
+    const couponData = database.collection("couponData");
 
 
     // auth related api
     app.post('/jwt', async (req, res) => {
       const user = req.body;
-      console.log('user for token', user);
+      // console.log('user for token', user);
       const token = jwt.sign(user, process.env.ACCESS_TOKEN_SECRET, { expiresIn: '1h' });
 
       res.cookie('token', token,cookieOptions)
@@ -92,7 +93,7 @@ async function run() {
     // when Logout user 
     app.post('/logout', async (req, res) => {
       const user = req.body;
-      console.log('logging out', user);
+      // console.log('logging out', user);
       res.clearCookie('token', {...cookieOptions, maxAge: 0 }).send({ success: true })
   })
 
@@ -122,15 +123,18 @@ app.put('/status/:id', async (req, res) => {
     // User Data post
     app.post('/User/:email', async (req, res) => {
       const data = req.body
+      console.log(data)
       const email=req.params.email
     //   console.log(data)
   const filter={email:email}
     const foundEmail = await UserData.findOne(filter);
     // console.log(foundEmail)
-      if (!foundEmail) {
-        const result = await UserData.insertOne(data)
-        res.send(result)
+      if (foundEmail) {
+        return
       }
+
+      const result = await UserData.insertOne(data)
+        res.send(result)
     // const foundEmailData = await UserData.findOne(filter);
     // res.send(foundEmail)
 
@@ -499,12 +503,51 @@ app.put('/status/:id', async (req, res) => {
     })
 
 
-    // recommendation data post
-    // app.post('/rec', async (req, res) => {
-    //   const user = req.body
-    //   const result = await data1.insertOne(user)
-    //   res.send(result)
-    // })
+    // coupons data post
+    app.post('/coupon', async (req, res) => {
+      const user = req.body
+      const result = await couponData.insertOne(user)
+      res.send(result)
+    })
+    // coupons data get
+    app.get('/coupons', async (req, res) => {
+      // const user = req.body
+      const cursor =  couponData.find()
+      const result=await cursor.toArray()
+      res.send(result)
+    })
+    // delete coupons data
+    app.delete('/deleteCoupons/:id',verifyToken, async (req, res) => {
+      const id = req.params.id;
+    //   console.log('asdf',id)
+      const query = { _id: new ObjectId(id) }
+      const result = await couponData.deleteOne(query);
+      res.send(result);
+    })
+    app.put('/Updatecoupon/:id', async (req, res) => {
+      const id = req.params.id;
+      const data=req.body
+      console.log('asdf',id,data)
+      const query = { _id: new ObjectId(id) }
+      const options = { upsert: true };
+
+
+      const updateData = {
+        $set: {
+          code: data.code,
+          amount: data.amount,
+          date: data.date,
+          description: data.description,
+          // externalLinks: data.visitors,
+          // location: data.location,
+          // Country: data.Country,
+          // description: data.description,
+          // spot: data.spot
+      }
+      }  
+          const result = await couponData.updateOne(query,updateData,options);
+      res.send(result);
+    })
 
     // recommendation data get 
     // app.get('/rec', async (req, res) => {
