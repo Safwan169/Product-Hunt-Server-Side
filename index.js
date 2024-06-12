@@ -185,7 +185,7 @@ app.put('/status/:id', async (req, res) => {
     app.post('/fetured', async (req, res) => {
       const data = req.body
       // const email=req.params.email
-      .log(data)
+      // .log(data)
   // const filter={email:email}
   //   const foundEmail = await UserData.findOne(filter);
   //   console.log(foundEmail)
