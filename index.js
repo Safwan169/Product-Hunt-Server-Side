@@ -4,6 +4,8 @@ const port = process.env.PROT || 5000;
 require('dotenv').config()
 const jwt = require('jsonwebtoken');
 const cookieParser = require('cookie-parser')
+const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
+
 
 const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 
@@ -180,6 +182,31 @@ app.put('/status/:id', async (req, res) => {
     })
 
     
+    // user membership purchased status add
+    app.put('/membership/:email',async(req,res)=>{
+
+      const email = req.params.email;
+      console.log(email)
+
+      // const data=req.body
+      // // console.log(data)
+      const filter = { email:email }
+      const options = { upsert: true };
+      // // const data = req.body;
+      // // console.log(data)
+
+      const updateData = {
+        $set: {
+          membership:`verified`
+      }
+      }
+
+      const result = await UserData.updateOne(filter, updateData, options);
+      console.log('sdf',result)
+      res.send(result);
+    })
+
+    
 
     // fetured data
     app.post('/fetured', async (req, res) => {
@@ -212,21 +239,53 @@ app.put('/status/:id', async (req, res) => {
       const result = await cursor.toArray();
       res.send(result);
     })
-    // get all add data  by tags
+
+
+    // get all add data BY email for membership is have or not .. 
+    app.get('/alldata/:email', async (req, res) => {
+      const email=req.params.email;
+      console.log(email)
+      const query={email:email}
+      const cursor = await add_Data.findOne(query);
+      // const result = await cursor.toArray();
+      console.log(cursor)
+       
+      if (cursor) {
+        res.send("yes")
+        
+      }
+      else{
+        res.send("no")
+      }
+    })
+    // get all add data  by tags for search option
     app.post('/alldataTags', async (req, res) => {
       const data=req.body
     
-
+console.log(data,'here is the data')
     const key = 'text';
-      const query = { [`tags.${key}`]: data.tag };
+
+    // let query
+    //    query = { [`tags.${key}`]: data.tag , productName:data?.tag };
 
 
-      const cursor = add_Data.find(query);
+
+
+
+      const cursor = add_Data.find({
+        $or: [
+          { productName: { $regex: data.tag, $options: 'i' } },
+          { [`tags.${key}`]: { $regex: data.tag, $options: 'i' } }
+        ]
+      });
+
+
+      
      
 
       if (data.tag) {
         const result = await cursor.toArray();
-        // console.log(result)
+        console.log(result,"here is the car for searching useing name and ")
        return res.send(result);        
        }
       const all = add_Data.find();
@@ -253,7 +312,7 @@ app.put('/status/:id', async (req, res) => {
       res.send(result)
     })
 
-    // report data
+    //post report data
 
     app.post('/report',async(req,res)=>{
       const data=req.body
@@ -261,13 +320,15 @@ app.put('/status/:id', async (req, res) => {
       const result=await reportData.insertOne(data)
       res.send(result)
     })
-    // reviews
+    // post reviews data
     app.post('/rev',async(req,res)=>{
       const data=req.body
       // console.log(data)
       const result=await reviewData.insertOne(data)
       res.send(result)
     })
+
+    // get reviewData
     app.get("/vvv",async(req,res)=>{
       // const id=req.params.id
       // const filter = { _id: new ObjectId(id) }
@@ -313,7 +374,7 @@ app.put('/status/:id', async (req, res) => {
       //   projection: { _id: 0, voteUser: 1 },
       // };
       const filter = { _id: new ObjectId(id) }
-      const filter1 = { _id: id }
+      const filter1 = { _id: new ObjectId (id) }
 
 
       const result = await add_Data.findOne(filter,);
@@ -548,6 +609,25 @@ app.put('/status/:id', async (req, res) => {
           const result = await couponData.updateOne(query,updateData,options);
       res.send(result);
     })
+
+
+    //payment intent
+
+    app.post('/create-payment-intent', async (req, res) => {
+      const { price } = req.body;
+      const amount = parseInt(price * 100);
+      console.log(amount, 'amount inside the intent')
+
+      const paymentIntent = await stripe.paymentIntents.create({
+        amount: amount,
+        currency: 'usd',
+        payment_method_types: ['card']
+      });
+
+      res.send({
+        clientSecret: paymentIntent.client_secret
+      })
+    });
 
     // recommendation data get 
     // app.get('/rec', async (req, res) => {
